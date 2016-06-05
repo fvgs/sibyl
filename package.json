@@ -1,0 +1,33 @@
+{
+  "name": "sibyl",
+  "version": "0.0.0",
+  "description": "The Sibyl System implemented as a Slack app",
+  "scripts": {
+    "start": "nodemon --watch build/server.js build/server.js",
+    "build": "webpack --display-error-details",
+    "watch": "webpack --watch --display-error-details",
+    "clean": "rm -rf build/ babel_cache/ node_modules/",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fvargas/Sibyl.git"
+  },
+  "private": true,
+  "author": "Felipe Vargas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fvargas/Sibyl/issues"
+  },
+  "homepage": "https://github.com/fvargas/Sibyl",
+  "dependencies": {
+    "@slack/client": "3.4.0"
+  },
+  "devDependencies": {
+    "babel-core": "6.9.1",
+    "babel-loader": "6.2.4",
+    "babel-preset-es2015": "6.9.0",
+    "nodemon": "1.9.2",
+    "webpack": "1.13.1"
+  }
+}
