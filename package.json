@@ -21,7 +21,8 @@
   },
   "homepage": "https://github.com/fvargas/Sibyl",
   "dependencies": {
-    "@slack/client": "3.4.0"
+    "@slack/client": "3.4.0",
+    "sentiment": "1.0.6"
   },
   "devDependencies": {
     "babel-core": "6.9.1",
