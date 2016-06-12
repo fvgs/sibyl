@@ -4,26 +4,44 @@
 
 import sentiment from 'sentiment';
 
+const NUM_USER_MESSAGES = 10;
+
 /**
  * Compute a user's Psycho-Pass.
  *
  * @public
- * @param {string[]} messages The user's ten most recent messages beginning with
- * the latest and ending with the oldest.
- * @returns {Number} The user's Psycho-Pass.
+ * @param {string[]} messages The user's {NUM_USER_MESSAGES} most recent
+ * messages beginning with the latest and ending with the oldest.
+ * @return {number} The user's Psycho-Pass.
  */
 function computeUserPsychoPass(messages) {
   const weights = [5, 5, 5, 4, 4, 3, 3, 2, 2, 2];
-  const psychoPass = messages.reduce(helper, 0);
-  return psychoPass;
+  const weightedRatingSum = messages.reduce(helper, 0);
+  const base = 70;
+  let psychoPass = Math.floor(base + weightedRatingSum);
 
-  function helper(prev, current, index) {
-    const messagePsychoPass = computeMessagePsychoPass(current);
-    const weightedMessagePyschoPass = weights[index] * messagePsychoPass;
-    const sum = prev + weightedMessagePyschoPass;
-
-    return sum;
+  if (psychoPass < 0) {
+    psychoPass = 0;
   }
+
+  return psychoPass;
+}
+
+/**
+ * Compute the weighted rating of a message and return the accumulated sum.
+ *
+ * @private
+ * @param {number} The accumulated sum.
+ * @param {string} The current message.
+ * @param {number} The index of the current message.
+ * @return {number} The new sum.
+ */
+function helper(prev, current, index) {
+  const messagePsychoPass = computeMessagePsychoPass(current);
+  const weightedMessagePyschoPass = weights[index] * messagePsychoPass;
+  const sum = prev + weightedMessagePyschoPass;
+
+  return sum;
 }
 
 /**
@@ -38,7 +56,7 @@ function computeChannelPsychoPass() {
  *
  * @private
  * @param {string} message
- * @returns {Number} The Psycho-Pass rating
+ * @return {number} The Psycho-Pass rating.
  */
 function computeMessagePsychoPass(message) {
   const { score, comparative } = sentiment(message);
@@ -57,4 +75,4 @@ function computeMessagePsychoPass(message) {
   return psychoPass;
 }
 
-export { computeUserPsychoPass, computeChannelPsychoPass };
+export { computeUserPsychoPass, computeChannelPsychoPass, NUM_USER_MESSAGES };
