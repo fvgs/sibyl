@@ -10,12 +10,11 @@ const NUM_USER_MESSAGES = 10;
  * Compute a user's Psycho-Pass.
  *
  * @public
- * @param {string[]} messages The user's {NUM_USER_MESSAGES} most recent
- * messages beginning with the latest and ending with the oldest.
+ * @param {string[]} messages An array containing zero to {NUM_USER_MESSAGES}
+ * messages beginning with the most recent and ending with the oldest.
  * @return {number} The user's Psycho-Pass.
  */
 function computeUserPsychoPass(messages) {
-  const weights = [5, 5, 5, 4, 4, 3, 3, 2, 2, 2];
   const weightedRatingSum = messages.reduce(helper, 0);
   const base = 70;
   let psychoPass = Math.floor(base + weightedRatingSum);
@@ -37,6 +36,7 @@ function computeUserPsychoPass(messages) {
  * @return {number} The new sum.
  */
 function helper(prev, current, index) {
+  const weights = [5, 5, 5, 4, 4, 3, 3, 2, 2, 2];
   const messagePsychoPass = computeMessagePsychoPass(current);
   const weightedMessagePyschoPass = weights[index] * messagePsychoPass;
   const sum = prev + weightedMessagePyschoPass;
