@@ -2,13 +2,13 @@
  * Class responsible for serving an individual team.
  */
 
-import { RtmClient, CLIENT_EVENTS, RTM_EVENTS } from '@slack/client';
+import { RtmClient, RTM_EVENTS } from '@slack/client';
 
 import Sibyl from './Sibyl';
 
 export default class TeamServer {
   constructor(token) {
-    this.sibyl = new Sibyl();
+    this.sibyl = new Sibyl(token);
     this.rtm = new RtmClient(token, { logLevel: 'warn' });
 
     this.bindEventHandlers();
@@ -47,6 +47,7 @@ export default class TeamServer {
     // message_changed
     // message_deleted
     // file_comment
-    this.sibyl.newMessage(user, text, channel, ts);
+    const response = this.sibyl.newMessage(user, text, channel, ts);
+    response.then(console.log);
   }
 };
