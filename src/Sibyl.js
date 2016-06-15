@@ -164,7 +164,8 @@ export default class {
       if (psychoPass === null) {
         return 'The person whose Psycho-Pass was requested does not exist.';
       } else {
-        return `The user's Psycho-Pass is ${psychoPass}.`;
+        const name = this.getNameById(id);
+        return `${name} has a Psycho-Pass of ${psychoPass}.`;
       }
     }).catch((err) => {
       return `Sibyl has encountered an error communicating with Slack's ` +
@@ -286,13 +287,20 @@ export default class {
    *
    * @private
    * @param {string} id The user id.
-   * @return {string|null} The username or null if no matching user found.
+   * @return {string} The username. 
    */
   getUsernameById(id) {
-    if (!(id in this.store.userInfo)) {
-      return null;
-    } else {
-      return this.store.userInfo[id].username;
-    }
+    return this.store.userInfo[id].username;
+  }
+
+  /**
+   * Translate a user id to a name.
+   *
+   * @private
+   * @param {string} id The user id.
+   * @return {string} The name.
+   */
+  getNameById(id) {
+    return this.store.userInfo[id].name;
   }
 };
