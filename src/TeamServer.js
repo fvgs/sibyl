@@ -48,6 +48,10 @@ export default class TeamServer {
     // message_deleted
     // file_comment
     const response = this.sibyl.newMessage(user, text, channel, ts);
-    response.then(console.log);
+    response.then((res) => {
+      if (res) {
+        this.rtm.sendMessage(res, channel);
+      }
+    });
   }
 };
