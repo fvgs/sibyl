@@ -37,6 +37,8 @@ export default class {
       switch (commandInfo.command) {
         case 'user':
           return this.psychoPassUser(commandInfo.id);
+        case 'help':
+          return Promise.resolve(this.help());
       }
     }
 
@@ -99,6 +101,18 @@ export default class {
     }
 
     return null;
+  }
+
+  /**
+   * Produce help message.
+   *
+   * @private
+   * @return {string} The help message.
+   */
+  help() {
+    return 'The following commands are available:\n\n' +
+      'psychopass @username\n' +
+      'psychopass help';
   }
 
   /**
