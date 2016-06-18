@@ -13,7 +13,7 @@ export default class {
    * @param {string} token The Slack API token.
    */
   constructor(token) {
-    this.store = { userInfo: {}, users: {}, channels: {} };
+    this.store = { userInfo: new Map(), users: new Map(), channels: new Map() };
     this.web = new WebClient(token);
   }
 
@@ -142,13 +142,13 @@ export default class {
   updateUser(id, message, channel, timestamp) {
     const userData = { message, channel, timestamp };
 
-    if (id in this.store.users) {
-      const len = this.store.users[id].unshift(userData);
+    if (this.store.users.has(id)) {
+      const len = this.store.users.get(id).unshift(userData);
       if (len > NUM_USER_MESSAGES) {
-        this.store.users[id].pop();
+        this.store.users.get(id).pop();
       }
     } else {
-      this.store.users[id] = [userData];
+      this.store.users.set(id, [userData]);
     }
   }
 
@@ -189,8 +189,8 @@ export default class {
 
       if (this.insufficientMessages(id)) {
         return this.fetchMessages(id).then(() => {
-          if (!(id in this.store.users)) {
-            this.store.users[id] = [];
+          if (!this.store.users.has(id)) {
+            this.store.users.set(id, []);
           }
 
           return this.getUserPsychoPassHelper(id);
@@ -209,7 +209,7 @@ export default class {
    * @return {number} The user's Psycho-Pass.
    */
   getUserPsychoPassHelper(id) {
-    const messageData = this.store.users[id];
+    const messageData = this.store.users.get(id);
     const messages = messageData.map(data => data.message);
     const psychoPass = computeUserPsychoPass(messages);
 
@@ -225,13 +225,13 @@ export default class {
    * @return {Promise<boolean>} True if the id is valid, false otherwise.
    */
   isValidUserId(id) {
-    if (id in this.store.userInfo) {
+    if (this.store.userInfo.has(id)) {
       return Promise.resolve(true);
     }
 
     return this.web.users.info(id).then((userInfo) => {
       const { name, real_name } = userInfo.user;
-      this.store.userInfo[id] = { username: name, name: real_name };
+      this.store.userInfo.set(id, { username: name, name: real_name });
       return true;
     }).catch((err) => {
       switch (err.message) {
@@ -255,8 +255,8 @@ export default class {
    * @return {boolean} True if there are insufficient messages, false otherwise.
    */
   insufficientMessages(id) {
-    return !(id in this.store.users) ||
-      this.store.users[id].length < NUM_USER_MESSAGES;
+    return !this.store.users.has(id) ||
+      this.store.users.get(id).length < NUM_USER_MESSAGES;
   }
 
   /**
@@ -278,7 +278,7 @@ export default class {
         timestamp: messageData.ts,
       }));
 
-      this.store.users[id] = messages;
+      this.store.users.set(id, messages);
     }).catch(() => {});
   }
 
@@ -290,7 +290,7 @@ export default class {
    * @return {string} The username. 
    */
   getUsernameById(id) {
-    return this.store.userInfo[id].username;
+    return this.store.userInfo.get(id).username;
   }
 
   /**
@@ -301,6 +301,6 @@ export default class {
    * @return {string} The name.
    */
   getNameById(id) {
-    return this.store.userInfo[id].name;
+    return this.store.userInfo.get(id).name;
   }
 };
