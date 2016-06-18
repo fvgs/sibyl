@@ -30,19 +30,14 @@ export default class {
    * null if there is no response.
    */
   newMessage(user, message, channel, timestamp) {
+    this.updateUser(user, message, channel, timestamp);
+
     const commandInfo = this.parseCommand(message);
-
     if (commandInfo) {
-      if ('text' in commandInfo) {
-        this.updateUser(user, commandInfo.text, channel, timestamp);
-      }
-
       switch (commandInfo.command) {
         case 'user':
           return this.psychoPassUser(commandInfo.id);
       }
-    } else {
-      this.updateUser(user, message, channel, timestamp);
     }
 
     return Promise.resolve(null);
@@ -54,8 +49,7 @@ export default class {
    * @private
    * @param {string} message
    * @return {object|null} An object containing information about the parsed
-   * command if one is found and any text after the command if present. If no
-   * command is found returns null.
+   * command if one is found. If no command is found returns null.
    */
   parseCommand(message) {
     if (message === 'psychopass') {
@@ -77,23 +71,12 @@ export default class {
           info.command = 'channel';
         }
 
-        const text = fragment.substr(result[0].length + 1);
-        if (text.length > 0) {
-          info.text = text;
-        }
-
         return info;
       }
 
       subCommand = /^help(?:\s|$)/;
       if (subCommand.test(fragment)) {
         const info = { command: 'help' };
-        const text = fragment.substr('help'.length + 1);
-
-        if (text.length > 0) {
-          info.text = text;
-        }
-
         return info;
       }
 
@@ -104,24 +87,12 @@ export default class {
         let command = /^users(?:\s|$)/;
         if (command.test(subFragment)) {
           const info = { command: 'users' };
-          const text = subFragment.substr('users'.length + 1);
-
-          if (text.length > 0) {
-            info.text = text;
-          }
-
           return info;
         }
 
         command = /^channels(?:\s|$)/;
         if (command.test(subFragment)) {
           const info = { command: 'channels' };
-          const text = subFragment.substr('channels'.length + 1);
-
-          if (text.length > 0) {
-            info.text = text;
-          }
-
           return info;
         }
       }
