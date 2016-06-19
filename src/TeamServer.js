@@ -8,11 +8,18 @@ import Sibyl from './Sibyl';
 
 export default class TeamServer {
   constructor(token) {
-    this.sibyl = new Sibyl(token);
     this.rtm = new RtmClient(token, { logLevel: 'warn' });
 
     this.bindEventHandlers();
-    this.rtm.start();
+
+    Sibyl.createSibyl(token).then((sibyl) => {
+      this.sibyl = sibyl;
+      this.rtm.start();
+      console.log('Connected to RTM server');
+    }).catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
   }
 
   bindEventHandlers() {
@@ -48,10 +55,9 @@ export default class TeamServer {
     // message_deleted
     // file_comment
     const response = this.sibyl.newMessage(user, text, channel, ts);
-    response.then((res) => {
-      if (res) {
-        this.rtm.sendMessage(res, channel);
-      }
-    });
+
+    if (response) {
+      this.rtm.sendMessage(response, channel);
+    }
   }
 };
