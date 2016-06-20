@@ -152,12 +152,12 @@ export default class {
     if (message.startsWith(command)) {
       const fragment = message.substr(command.length);
 
-      let subCommand = /^<([@#].{2,})>/;
+      let subCommand = /^<([@#])(.{2,})>/;
       const result = subCommand.exec(fragment);
       if (result) {
-        const info = { id: result[1].substr(1) };
+        const info = { id: result[2] };
 
-        if (result[1].charAt(0) == '@') {
+        if (result[1] === '@') {
           info.command = 'user';
         } else {
           info.command = 'channel';
