@@ -5,6 +5,7 @@ import {
   computeUserPsychoPass,
   NUM_USER_MESSAGES,
 } from './psychoPass';
+import Leaderboard from './leaderboard/Leaderboard';
 
 /**
  * Class responsible for processing input and maintaing the application state.
@@ -21,8 +22,14 @@ export default class {
    * containing channel data.
    */
   constructor(web, userData, channelData) {
-    this.store = { users: userData, channels: channelData };
+    this.store = {
+      users: userData,
+      channels: channelData,
+      leaderboards: { users: new Leaderboard(), channels: new Leaderboard() },
+    };
     this.web = web;
+
+    this.initializeUserLeaderboard();
   }
 
   /**
@@ -76,6 +83,7 @@ export default class {
   /**
    * Compile data for the given user.
    *
+   * @private
    * @param {WebClient} web A WebClient instance.
    * @param {string} username The username by which to identify the user.
    * @param {string} name The name of the user.
@@ -108,6 +116,17 @@ export default class {
   }
 
   /**
+   * Initialize the user leaderboard.
+   *
+   * @private
+   */
+  initializeUserLeaderboard() {
+    this.store.users.forEach((user, id) => {
+      this.store.leaderboards.users.update(id, user.psychoPass);
+    });
+  }
+
+  /**
    * Process a new message.
    *
    * @public
@@ -129,6 +148,8 @@ export default class {
           return this.psychoPassUser(commandInfo.id);
         case 'help':
           return this.help();
+        case 'users':
+          return this.leaderboardUsers();
       }
     }
 
@@ -206,6 +227,33 @@ export default class {
   }
 
   /**
+   * Produce response for user leaderboard.
+   *
+   * @private
+   * @return {string} The user leaderboard response.
+   */
+  leaderboardUsers() {
+    const highest = this.store.leaderboards.users.getHighest();
+    const lowest = this.store.leaderboards.users.getLowest();
+
+    let s = 'Lowest:\n';
+    lowest.forEach((entry, index) => {
+      const psychoPass = entry.value;
+      const username = this.getUsernameById(entry.id);
+      s += `${psychoPass} ${username}\n`;
+    });
+
+    s += '\nHighest:\n';
+    highest.forEach((entry, index) => {
+      const psychoPass = entry.value;
+      const username = this.getUsernameById(entry.id);
+      s += `${psychoPass} ${username}\n`;
+    });
+
+    return s;
+  }
+
+  /**
    * Update stored data and Psycho-Pass of a user based on a new message.
    *
    * @private
@@ -225,9 +273,15 @@ export default class {
     }
 
     const ratings = messageInfo.map(info => info.rating);
-    const psychoPass = computeUserPsychoPass(ratings);
+    const newPsychoPass = computeUserPsychoPass(ratings);
+    const oldPsychoPass = this.store.users.get(id).psychoPass;
 
-    this.store.users.get(id).psychoPass = psychoPass;
+    this.store.leaderboards.users.update(
+      id,
+      newPsychoPass,
+      oldPsychoPass
+    );
+    this.store.users.get(id).psychoPass = newPsychoPass;
   }
 
   /**
@@ -292,6 +346,7 @@ export default class {
   /**
    * Get a user's Psycho-Pass.
    *
+   * @private
    * @param {string} id The user id.
    * @return {number} The user's Psycho-Pass.
    */

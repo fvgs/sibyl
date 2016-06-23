@@ -36,6 +36,38 @@ export default class {
   }
 
   /**
+   * Get the highest num entries.
+   *
+   * @private
+   * @param {number} [num = 10] The number of entries to get.
+   * @return {object[]} The num highest entries.
+   */
+  getHighest(num = 10) {
+    const highest = this.leaderboard.slice(-10).map(entry => ({
+      id: entry.getId(),
+      value: entry.getValue(),
+    }));
+
+    return highest.reverse();
+  }
+
+  /**
+   * Get the lowest num entries.
+   *
+   * @private
+   * @param {number} [num = 10] The number of entries to get.
+   * @return {object[]} The num lowest entries.
+   */
+  getLowest(num = 10) {
+    const lowest = this.leaderboard.slice(0, 10).map(entry => ({
+      id: entry.getId(),
+      value: entry.getValue(),
+    }));
+
+    return lowest;
+  }
+
+  /**
    * Add an entry to the leaderboard while maintaining the order.
    *
    * @private
@@ -45,7 +77,8 @@ export default class {
     const value = entry.getValue();
     let index = this.findIndex(value);
 
-    if (this.leaderboard.length > 0 && this.leaderboard[index] < value) {
+    if (this.leaderboard.length > 0 &&
+        value > this.leaderboard[index].getValue()) {
       index++;
     }
 
@@ -65,7 +98,7 @@ export default class {
     let index = origin;
     let entry = this.leaderboard[index];
 
-    while (entry.getId() !== id && entry.getValue() === value) {
+    while (entry && entry.getId() !== id && entry.getValue() === value) {
       entry = this.leaderboard[++index];
     }
 
