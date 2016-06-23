@@ -15,8 +15,9 @@ export default class {
    * @public
    * @param {string} id
    * @param {number} newValue A numerical value used to rank entries.
-   * @param {number|null} oldValue The old value associated with the id, or null
-   * if this is the first time calling the method with the id.
+   * @param {number} [oldValue] The old value associated with the id. Not
+   * used if first time calling the method for a particular id. If the id has
+   * been updated previously, oldValue must be provided.
    */
   update(id, newValue, oldValue) {
     if (newValue === oldValue) {
@@ -24,7 +25,7 @@ export default class {
     }
 
     let entry;
-    if (oldValue === null) {
+    if (oldValue === undefined) {
       entry = new Entry(id, newValue);
     } else {
       entry = this.remove(id, oldValue);
@@ -42,7 +43,11 @@ export default class {
    */
   insert(entry) {
     const value = entry.getValue();
-    const index = this.findIndex(value);
+    let index = this.findIndex(value);
+
+    if (this.leaderboard.length > 0 && this.leaderboard[index] < value) {
+      index++;
+    }
 
     this.leaderboard.splice(index, 0, entry);
   }
@@ -73,23 +78,27 @@ export default class {
       }
     }
 
-    const [entry] = this.leaderboard.splice(index, 1);
+    [entry] = this.leaderboard.splice(index, 1);
     return entry;
   }
 
   /**
    * Find the index of a value in the leaderboard. For duplicate values, return
-   * the index of the first matching value.
+   * the index of the first matching value. For a target not present in the
+   * leaderboard, return the index of an adjacent value. Likewise, if the
+   * leaderboard is empty, return 0.
    *
+   * @private
    * @param {number} target The target value.
    * @return {number} The index.
    */
   findIndex(target) {
     let low = 0;
+    let mid = 0;
     let high = this.leaderboard.length - 1;
 
     while (low <= high) {
-      const mid = (low + high) / 2;
+      mid = Math.round((low + high) / 2);
       const value = this.leaderboard[mid].getValue();
 
       if (value < target) {
@@ -100,5 +109,7 @@ export default class {
         return mid;
       }
     }
+
+    return mid;
   }
 };
