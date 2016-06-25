@@ -223,6 +223,7 @@ export default class {
   help() {
     return 'The following commands are available:\n\n' +
       'psychopass @username\n' +
+      'psychopass leaderboard users\n' +
       'psychopass help';
   }
 
