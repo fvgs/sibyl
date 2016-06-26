@@ -309,7 +309,7 @@ export default class {
    */
   static fetchUserMessages(web, username) {
     const query = `from:${username}`;
-    const options = { sort: 'timestamp', count: 10 };
+    const options = { sort: 'timestamp', count: NUM_USER_MESSAGES };
 
     return web.search.messages(query, options).then((res) => {
       const messages = res.messages.matches.map(messageData => ({

@@ -5,6 +5,7 @@
 import sentiment from 'sentiment';
 
 const NUM_USER_MESSAGES = 10;
+const NUM_CHANNEL_MESSAGES = 20;
 
 /**
  * Compute the rating of a single message.
@@ -80,4 +81,5 @@ export {
   computeUserPsychoPass,
   computeChannelPsychoPass,
   NUM_USER_MESSAGES,
+  NUM_CHANNEL_MESSAGES,
 };
