@@ -41,7 +41,37 @@ function computeMessageRating(message) {
  * @return {number} The user's Psycho-Pass.
  */
 function computeUserPsychoPass(messageRatings) {
-  const weightedRatingSum = messageRatings.reduce(userPsychoPassHelper, 0);
+  const psychoPass = computePsychoPass(messageRatings, NUM_USER_MESSAGES);
+  return psychoPass;
+}
+
+/**
+ * Compute a channel's Psycho-Pass.
+ *
+ * @public
+ * @param {number[]} messageRatings An array containing zero to
+ * {NUM_CHANNEL_MESSAGES} message ratings beginning with the most recent and
+ * ending with the oldest.
+ * @return {number} The channel's Psycho-Pass.
+ */
+function computeChannelPsychoPass(messageRatings) {
+  const psychoPass = computePsychoPass(messageRatings, NUM_CHANNEL_MESSAGES);
+  return psychoPass;
+}
+
+/**
+ * Compute a Psycho-Pass.
+ *
+ * @private
+ * @param {number[]} messageRatings An array of message ratings beginning with
+ * the most recent and ending with the oldest.
+ * @param {number} num The intended number of message ratings.
+ * @return {number} The Psycho-Pass.
+ */
+function computePsychoPass(messageRatings, num) {
+  const weights = getWeights(num);
+  const reducer = reducerFactory(weights);
+  const weightedRatingSum = messageRatings.reduce(reducer, 0);
   const base = 70;
   let psychoPass = Math.floor(base + weightedRatingSum);
 
@@ -53,27 +83,60 @@ function computeUserPsychoPass(messageRatings) {
 }
 
 /**
- * Compute the accumulated sum of weighted message ratings.
+ * Get the weights to use in computing a Psycho-Pass based on the number of
+ * message ratings.
  *
  * @private
- * @param {number} sum
- * @param {number} currentMessageRating
- * @param {number} index
- * @return {number} The new sum.
+ * @param {number} num The number of message ratings.
+ * @return {number[]} The numerical weights.
  */
-function userPsychoPassHelper(sum, currentMessageRating, index) {
-  const weights = [5, 5, 5, 4, 4, 3, 3, 2, 2, 2];
-  const weightedMessageRating = weights[index] * currentMessageRating;
-  const newSum = sum + weightedMessageRating;
+function getWeights(num) {
+  const weights10 = [5, 5, 5, 4, 4, 3, 3, 2, 2, 2];
+  const weights20 = [
+    2.5, 2.5, 2.5, 2.5, 2.5,
+    2, 2, 2, 2, 2,
+    1.5, 1.5, 1.5, 1.5, 1.5,
+    1, 1, 1, 1, 1,
+  ];
 
-  return newSum;
+  let weights;
+  switch (num) {
+    case 10:
+      weights = weights10;
+      break;
+    case 20:
+      weights = weights20;
+  }
+
+  return weights;
 }
 
 /**
- * Compute a channel's Psycho-Pass.
+ * Get a message ratings reducer that uses the given weights.
+ *
+ * @private
+ * @param {number[]} weights Weights corresponding to the message ratings to be
+ * reduced.
+ * @return {function} The reducer.
  */
-function computeChannelPsychoPass() {
+function reducerFactory(weights) {
+  return reducer;
 
+  /**
+   * Compute the accumulated sum of weighted message ratings.
+   *
+   * @private
+   * @param {number} sum
+   * @param {number} currentMessageRating
+   * @param {number} index
+   * @return {number} The new sum.
+   */
+  function reducer(sum, currentMessageRating, index) {
+    const weightedMessageRating = weights[index] * currentMessageRating;
+    const newSum = sum + weightedMessageRating;
+
+    return newSum;
+  }
 }
 
 export {
