@@ -3,7 +3,9 @@ import { WebClient } from '@slack/client';
 import {
   computeMessageRating,
   computeUserPsychoPass,
+  computeChannelPsychoPass,
   NUM_USER_MESSAGES,
+  NUM_CHANNEL_MESSAGES,
 } from './psychoPass';
 import Leaderboard from './leaderboard/Leaderboard';
 
@@ -92,10 +94,9 @@ export default class {
   static compileUserData(web, username, name) {
     return this.fetchUserMessages(web, username).then((messages) => {
       const messageInfo = messages.map(({ message, channel, timestamp }) => {
-          const rating = computeMessageRating(message);
-          return { rating, channel, timestamp };
-        }
-      );
+        const rating = computeMessageRating(message);
+        return { rating, channel, timestamp };
+      });
       const ratings = messageInfo.map(info => info.rating);
       const psychoPass = computeUserPsychoPass(ratings);
 
@@ -112,7 +113,47 @@ export default class {
    * object.
    */
   static getInitialChannelData(web) {
-    return Promise.resolve(new Map());
+    return web.channels.list({ exclude_archived: 1 }).then(({ channels }) => {
+      const map = new Map();
+      const promises = [];
+
+      for (const { id, name } of channels) {
+        const promise = this.compileChannelData(web, id, name).then(
+          (channelData) => {
+            map.set(id, channelData);
+          }
+        );
+
+        promises.push(promise);
+      }
+
+      return Promise.all(promises).then(() => map);
+    });
+  }
+
+  /**
+   * Compile data for the given channel.
+   *
+   * @private
+   * @param {WebClient} web A WebClient instance.
+   * @param {string} id The channel id.
+   * @param {string} name The name of the channel.
+   * @return {Promise<object>} Data related to the channel.
+   */
+  static compileChannelData(web, id, name) {
+    return web.channels.history(id, { count: NUM_CHANNEL_MESSAGES }).then(
+      ({ messages }) => {
+        const messageInfo = messages.map(({ text, ts }) => {
+          const rating = computeMessageRating(text);
+          return { rating, timestamp: ts };
+        });
+
+        const ratings = messageInfo.map(({ rating }) => rating);
+        const psychoPass = computeChannelPsychoPass(ratings);
+
+        return { name, psychoPass, messageInfo };
+      }
+    );
   }
 
   /**
