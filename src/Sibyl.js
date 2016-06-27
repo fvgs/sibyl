@@ -32,6 +32,7 @@ export default class {
     this.web = web;
 
     this.initializeUserLeaderboard();
+    this.initializeChannelLeaderboard();
   }
 
   /**
@@ -168,6 +169,17 @@ export default class {
   }
 
   /**
+   * Initialize the channel leaderboard.
+   *
+   * @private
+   */
+  initializeChannelLeaderboard() {
+    this.store.channels.forEach((channel, id) => {
+      this.store.leaderboards.channels.update(id, channel.psychoPass);
+    });
+  }
+
+  /**
    * Process a new message.
    *
    * @public
@@ -193,6 +205,8 @@ export default class {
           return this.help();
         case 'users':
           return this.leaderboardUsers();
+        case 'channels':
+          return this.leaderboardChannels();
       }
     }
 
@@ -292,6 +306,33 @@ export default class {
       const psychoPass = entry.value;
       const username = this.getUsernameById(entry.id);
       s += `${psychoPass} ${username}\n`;
+    });
+
+    return s;
+  }
+
+  /**
+   * Produce response for channel leaderboard.
+   *
+   * @private
+   * @return {string} The channel leaderboard response.
+   */
+  leaderboardChannels() {
+    const highest = this.store.leaderboards.channels.getHighest();
+    const lowest = this.store.leaderboards.channels.getLowest();
+
+    let s = 'Lowest:\n';
+    lowest.forEach((entry, index) => {
+      const psychoPass = entry.value;
+      const name = this.getChannelName(entry.id);
+      s += `${psychoPass} ${name}\n`;
+    });
+
+    s += '\nHighest:\n';
+    highest.forEach((entry, index) => {
+      const psychoPass = entry.value;
+      const name = this.getChannelName(entry.id);
+      s += `${psychoPass} ${name}\n`;
     });
 
     return s;
