@@ -280,7 +280,9 @@ export default class {
   help() {
     return 'The following commands are available:\n\n' +
       'psychopass @username\n' +
+      'psychopass #channel\n' +
       'psychopass leaderboard users\n' +
+      'psychopass leaderboard channels\n' +
       'psychopass help';
   }
 
