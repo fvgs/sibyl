@@ -187,6 +187,8 @@ export default class {
       switch (commandInfo.command) {
         case 'user':
           return this.psychoPassUser(commandInfo.id);
+        case 'channel':
+          return this.psychoPassChannel(commandInfo.id);
         case 'help':
           return this.help();
         case 'users':
@@ -341,6 +343,20 @@ export default class {
   }
 
   /**
+   * Handle a request for the Psycho-Pass of a channel and produce a response.
+   *
+   * @private
+   * @param {string} id The channel id.
+   * @return {string} Response to the request.
+   */
+  psychoPassChannel(id) {
+    const name = this.getChannelName(id);
+    const psychoPass = this.getChannelPsychoPass(id);
+
+    return `#${name} has a Psycho-Pass of ${psychoPass}`;
+  }
+
+  /**
    * Fetch the {NUM_USER_MESSAGES} most recent messages for a user.
    *
    * @private
@@ -394,5 +410,27 @@ export default class {
    */
   getUserPsychoPass(id) {
     return this.store.users.get(id).psychoPass;
+  }
+
+  /**
+   * Get the name of a channel.
+   *
+   * @private
+   * @param {string} id The channel id.
+   * @return {string} The channel name.
+   */
+  getChannelName(id) {
+    return this.store.channels.get(id).name;
+  }
+
+  /**
+   * Get a channel's Psycho-Pass.
+   *
+   * @private
+   * @param {string} id The channel id.
+   * @return {number} The channel's Psycho-Pass.
+   */
+  getChannelPsychoPass(id) {
+    return this.store.channels.get(id).psychoPass;
   }
 };
