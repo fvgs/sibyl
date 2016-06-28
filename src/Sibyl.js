@@ -299,14 +299,14 @@ export default class {
     let s = 'Lowest:\n';
     lowest.forEach((entry, index) => {
       const psychoPass = entry.value;
-      const username = this.getUsernameById(entry.id);
+      const username = this.getUserUsername(entry.id);
       s += `${psychoPass} ${username}\n`;
     });
 
     s += '\nHighest:\n';
     highest.forEach((entry, index) => {
       const psychoPass = entry.value;
-      const username = this.getUsernameById(entry.id);
+      const username = this.getUserUsername(entry.id);
       s += `${psychoPass} ${username}\n`;
     });
 
@@ -379,7 +379,7 @@ export default class {
    * @return {string} Response to the request.
    */
   psychoPassUser(id) {
-    const name = this.getNameById(id);
+    const name = this.getUserName(id);
     const psychoPass = this.getUserPsychoPass(id);
 
     return `${name} has a Psycho-Pass of ${psychoPass}`;
@@ -423,24 +423,24 @@ export default class {
   }
 
   /**
-   * Translate a user id to a username.
+   * Get a user's username.
    *
    * @private
    * @param {string} id The user id.
-   * @return {string} The username. 
+   * @return {string} The user's username. 
    */
-  getUsernameById(id) {
+  getUserUsername(id) {
     return this.store.users.get(id).username;
   }
 
   /**
-   * Translate a user id to a name.
+   * Get a user's name.
    *
    * @private
    * @param {string} id The user id.
-   * @return {string} The name.
+   * @return {string} The user's name.
    */
-  getNameById(id) {
+  getUserName(id) {
     return this.store.users.get(id).name;
   }
 
