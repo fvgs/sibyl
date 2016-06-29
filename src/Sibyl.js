@@ -403,7 +403,7 @@ export default class {
           text: message,
           ts: timestamp,
           channel: { id: channel },
-        }) => { message, timestamp, channel });
+        }) => ({ message, timestamp, channel }));
 
         return messages;
       }
