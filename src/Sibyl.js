@@ -64,12 +64,11 @@ export default class {
    * object.
    */
   static getInitialUserData(web) {
-    return web.users.list().then((res) => {
+    return web.users.list().then(({ members }) => {
       const map = new Map();
       const promises = [];
 
-      for (const user of res.members) {
-        const { id, name, real_name } = user;
+      for (const { id, name, real_name } of members) {
         const promise = this.compileUserData(web, name, real_name).then(
           (userData) => {
             map.set(id, userData);
@@ -98,7 +97,7 @@ export default class {
         const rating = computeMessageRating(message);
         return { rating, channel, timestamp };
       });
-      const ratings = messageInfo.map(info => info.rating);
+      const ratings = messageInfo.map(({ rating }) => rating);
       const psychoPass = computeUserPsychoPass(ratings);
 
       return { username, name, psychoPass, messageInfo };
@@ -144,9 +143,9 @@ export default class {
   static compileChannelData(web, id, name) {
     return web.channels.history(id, { count: NUM_CHANNEL_MESSAGES }).then(
       ({ messages }) => {
-        const messageInfo = messages.map(({ text, ts }) => {
+        const messageInfo = messages.map(({ text, ts: timestamp }) => {
           const rating = computeMessageRating(text);
-          return { rating, timestamp: ts };
+          return { rating, timestamp };
         });
 
         const ratings = messageInfo.map(({ rating }) => rating);
@@ -163,8 +162,8 @@ export default class {
    * @private
    */
   initializeUserLeaderboard() {
-    this.store.users.forEach((user, id) => {
-      this.store.leaderboards.users.update(id, user.psychoPass);
+    this.store.users.forEach(({ psychoPass }, id) => {
+      this.store.leaderboards.users.update(id, psychoPass);
     });
   }
 
@@ -174,8 +173,8 @@ export default class {
    * @private
    */
   initializeChannelLeaderboard() {
-    this.store.channels.forEach((channel, id) => {
-      this.store.leaderboards.channels.update(id, channel.psychoPass);
+    this.store.channels.forEach(({ psychoPass }, id) => {
+      this.store.leaderboards.channels.update(id, psychoPass);
     });
   }
 
@@ -233,21 +232,15 @@ export default class {
       let subCommand = /^<([@#])(.{2,})>/;
       const result = subCommand.exec(fragment);
       if (result) {
-        const info = { id: result[2] };
+        const id = result[2];
+        const command = result[1] === '@' ? 'user' : 'channel';
 
-        if (result[1] === '@') {
-          info.command = 'user';
-        } else {
-          info.command = 'channel';
-        }
-
-        return info;
+        return { id, command };
       }
 
       subCommand = /^help(?:\s|$)/;
       if (subCommand.test(fragment)) {
-        const info = { command: 'help' };
-        return info;
+        return { command: 'help' };
       }
 
       subCommand = 'leaderboard ';
@@ -256,14 +249,12 @@ export default class {
 
         let command = /^users(?:\s|$)/;
         if (command.test(subFragment)) {
-          const info = { command: 'users' };
-          return info;
+          return { command: 'users' };
         }
 
         command = /^channels(?:\s|$)/;
         if (command.test(subFragment)) {
-          const info = { command: 'channels' };
-          return info;
+          return { command: 'channels' };
         }
       }
     }
@@ -297,16 +288,14 @@ export default class {
     const lowest = this.store.leaderboards.users.getLowest();
 
     let s = 'Lowest:\n';
-    lowest.forEach((entry, index) => {
-      const psychoPass = entry.value;
-      const username = this.getUserUsername(entry.id);
+    lowest.forEach(({ id, value: psychoPass }, index) => {
+      const username = this.getUserUsername(id);
       s += `${psychoPass} ${username}\n`;
     });
 
     s += '\nHighest:\n';
-    highest.forEach((entry, index) => {
-      const psychoPass = entry.value;
-      const username = this.getUserUsername(entry.id);
+    highest.forEach(({ id, value: psychoPass }, index) => {
+      const username = this.getUserUsername(id);
       s += `${psychoPass} ${username}\n`;
     });
 
@@ -324,16 +313,14 @@ export default class {
     const lowest = this.store.leaderboards.channels.getLowest();
 
     let s = 'Lowest:\n';
-    lowest.forEach((entry, index) => {
-      const psychoPass = entry.value;
-      const name = this.getChannelName(entry.id);
+    lowest.forEach(({ id, value: psychoPass }, index) => {
+      const name = this.getChannelName(id);
       s += `${psychoPass} ${name}\n`;
     });
 
     s += '\nHighest:\n';
-    highest.forEach((entry, index) => {
-      const psychoPass = entry.value;
-      const name = this.getChannelName(entry.id);
+    highest.forEach(({ id, value: psychoPass }, index) => {
+      const name = this.getChannelName(id);
       s += `${psychoPass} ${name}\n`;
     });
 
@@ -352,16 +339,15 @@ export default class {
   updateUser(id, message, channel, timestamp) {
     const rating = computeMessageRating(message);
     const info = { rating, channel, timestamp };
-    const messageInfo = this.store.users.get(id).messageInfo;
+    const { messageInfo, psychoPass: oldPsychoPass } = this.store.users.get(id);
     const len = messageInfo.unshift(info);
 
     if (len > NUM_USER_MESSAGES) {
       messageInfo.pop();
     }
 
-    const ratings = messageInfo.map(info => info.rating);
+    const ratings = messageInfo.map(({ rating }) => rating);
     const newPsychoPass = computeUserPsychoPass(ratings);
-    const oldPsychoPass = this.store.users.get(id).psychoPass;
 
     this.store.leaderboards.users.update(
       id,
@@ -411,15 +397,17 @@ export default class {
     const query = `from:${username}`;
     const options = { sort: 'timestamp', count: NUM_USER_MESSAGES };
 
-    return web.search.messages(query, options).then((res) => {
-      const messages = res.messages.matches.map(messageData => ({
-        message: messageData.text,
-        channel: messageData.channel.id,
-        timestamp: messageData.ts,
-      }));
+    return web.search.messages(query, options).then(
+      ({ messages: { matches: userMessages } }) => {
+        const messages = userMessages.map(({
+          text: message,
+          ts: timestamp,
+          channel: { id: channel },
+        }) => { message, timestamp, channel });
 
-      return messages;
-    });
+        return messages;
+      }
+    );
   }
 
   /**
