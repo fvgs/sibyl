@@ -193,6 +193,10 @@ export default class {
   newMessage(id, message, channel, timestamp) {
     this.updateUser(id, message, channel, timestamp);
 
+    if (this.store.channels.has(channel)) {
+      this.updateChannel(channel, message, timestamp);
+    }
+
     const commandInfo = this.parseCommand(message);
     if (commandInfo) {
       switch (commandInfo.command) {
@@ -349,12 +353,36 @@ export default class {
     const ratings = messageInfo.map(({ rating }) => rating);
     const newPsychoPass = computeUserPsychoPass(ratings);
 
-    this.store.leaderboards.users.update(
-      id,
-      newPsychoPass,
-      oldPsychoPass
-    );
+    this.store.leaderboards.users.update(id, newPsychoPass, oldPsychoPass);
     this.store.users.get(id).psychoPass = newPsychoPass;
+  }
+
+  /**
+   * Update channel data based on a new message.
+   *
+   * @private
+   * @param {string} id The channel id.
+   * @param {string} message
+   * @param {string} timestamp
+   */
+  updateChannel(id, message, timestamp) {
+    const rating = computeMessageRating(message);
+    const info = { rating, timestamp };
+    const {
+      messageInfo,
+      psychoPass: oldPsychoPass,
+    } = this.store.channels.get(id);
+    const len = messageInfo.unshift(info);
+
+    if (len > NUM_CHANNEL_MESSAGES) {
+      messageInfo.pop();
+    }
+
+    const ratings = messageInfo.map(({ rating }) => rating);
+    const newPsychoPass = computeUserPsychoPass(ratings);
+
+    this.store.leaderboards.channels.update(id, newPsychoPass, oldPsychoPass);
+    this.store.channels.get(id).psychoPass = newPsychoPass;
   }
 
   /**
