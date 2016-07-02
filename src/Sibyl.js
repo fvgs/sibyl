@@ -204,6 +204,8 @@ export default class {
           return this.psychoPassUser(commandInfo.id);
         case 'channel':
           return this.psychoPassChannel(commandInfo.id);
+        case 'same channel':
+          return this.psychoPassChannel(channel);
         case 'help':
           return this.help();
         case 'users':
@@ -275,7 +277,7 @@ export default class {
   help() {
     return 'The following commands are available:\n\n' +
       'psychopass @username\n' +
-      'psychopass #channel\n' +
+      'psychopass [#channel]\n' +
       'psychopass leaderboard users\n' +
       'psychopass leaderboard channels\n' +
       'psychopass help';
