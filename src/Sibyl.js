@@ -379,7 +379,7 @@ export default class {
     }
 
     const ratings = messageInfo.map(({ rating }) => rating);
-    const newPsychoPass = computeUserPsychoPass(ratings);
+    const newPsychoPass = computeChannelPsychoPass(ratings);
 
     this.store.leaderboards.channels.update(id, newPsychoPass, oldPsychoPass);
     this.store.channels.get(id).psychoPass = newPsychoPass;
