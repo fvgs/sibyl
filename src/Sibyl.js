@@ -275,12 +275,15 @@ export default class {
    * @return {string} The help message.
    */
   help() {
-    return 'The following commands are available:\n\n' +
-      'psychopass @username\n' +
-      'psychopass [#channel]\n' +
-      'psychopass leaderboard users\n' +
-      'psychopass leaderboard channels\n' +
-      'psychopass help';
+    return 'The following commands are available:\n' +
+      'psychopass @<username>  -  See the Psycho-Pass of a user\n' +
+      'psychopass [#<channel>]  -  See the Psycho-Pass of the current channel' +
+      ' or of the channel specified by the optional parameter\n' +
+      'psychopass leaderboard users  -  See the lowest and highest user' +
+      ' Psycho-Passes\n' +
+      'psychopass leaderboard channels  -  See the lowest and highest channel' +
+      ' Psycho-Passes\n' +
+      'psychopass help  -  See this help message';
   }
 
   /**
