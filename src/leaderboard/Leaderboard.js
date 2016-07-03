@@ -43,7 +43,7 @@ export default class {
    * @return {object[]} The num highest entries.
    */
   getHighest(num = 10) {
-    const highest = this.leaderboard.slice(-10).map(entry => ({
+    const highest = this.leaderboard.slice(-num).map(entry => ({
       id: entry.getId(),
       value: entry.getValue(),
     }));
@@ -59,7 +59,7 @@ export default class {
    * @return {object[]} The num lowest entries.
    */
   getLowest(num = 10) {
-    const lowest = this.leaderboard.slice(0, 10).map(entry => ({
+    const lowest = this.leaderboard.slice(0, num).map(entry => ({
       id: entry.getId(),
       value: entry.getValue(),
     }));
