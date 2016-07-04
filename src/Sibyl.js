@@ -298,14 +298,14 @@ export default class {
 
     let s = 'Lowest:\n';
     lowest.forEach(({ id, value: psychoPass }, index) => {
-      const username = this.getUserUsername(id);
-      s += `${psychoPass} ${username}\n`;
+      const name = this.getUserName(id);
+      s += `${psychoPass}    ${name}\n`;
     });
 
     s += '\nHighest:\n';
     highest.forEach(({ id, value: psychoPass }, index) => {
-      const username = this.getUserUsername(id);
-      s += `${psychoPass} ${username}\n`;
+      const name = this.getUserName(id);
+      s += `${psychoPass}    ${name}\n`;
     });
 
     return s;
@@ -323,14 +323,12 @@ export default class {
 
     let s = 'Lowest:\n';
     lowest.forEach(({ id, value: psychoPass }, index) => {
-      const name = this.getChannelName(id);
-      s += `${psychoPass} ${name}\n`;
+      s += `${psychoPass}    <#${id}>\n`;
     });
 
     s += '\nHighest:\n';
     highest.forEach(({ id, value: psychoPass }, index) => {
-      const name = this.getChannelName(id);
-      s += `${psychoPass} ${name}\n`;
+      s += `${psychoPass}    <#${id}>\n`;
     });
 
     return s;
@@ -412,10 +410,9 @@ export default class {
    * @return {string} Response to the request.
    */
   psychoPassChannel(id) {
-    const name = this.getChannelName(id);
     const psychoPass = this.getChannelPsychoPass(id);
 
-    return `#${name} has a Psycho-Pass of ${psychoPass}`;
+    return `<#${id}> has a Psycho-Pass of ${psychoPass}`;
   }
 
   /**
@@ -455,14 +452,22 @@ export default class {
   }
 
   /**
-   * Get a user's name.
+   * Get a user's name. If the user does not have a registered name, the
+   * username is returned.
    *
    * @private
    * @param {string} id The user id.
-   * @return {string} The user's name.
+   * @return {string} The user's name, or username if no registered name is
+   * found.
    */
   getUserName(id) {
-    return this.store.users.get(id).name;
+    let user = this.store.users.get(id).name;
+
+    if (!user) {
+      user = this.getUserUsername(id);
+    }
+
+    return user;
   }
 
   /**
