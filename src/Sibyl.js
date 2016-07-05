@@ -68,7 +68,7 @@ export default class {
       const map = new Map();
       const promises = [];
 
-      for (const { id, name, real_name } of members) {
+      members.forEach(({ id, name, real_name }) => {
         const promise = this.compileUserData(web, name, real_name).then(
           (userData) => {
             map.set(id, userData);
@@ -76,7 +76,7 @@ export default class {
         );
 
         promises.push(promise);
-      }
+      });
 
       return Promise.all(promises).then(() => map);
     });
@@ -117,7 +117,7 @@ export default class {
       const map = new Map();
       const promises = [];
 
-      for (const { id, name } of channels) {
+      channels.forEach(({ id, name }) => {
         const promise = this.compileChannelData(web, id, name).then(
           (channelData) => {
             map.set(id, channelData);
@@ -125,7 +125,7 @@ export default class {
         );
 
         promises.push(promise);
-      }
+      });
 
       return Promise.all(promises).then(() => map);
     });
