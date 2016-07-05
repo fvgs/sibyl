@@ -2,12 +2,13 @@
  * Class responsible for serving an individual team.
  */
 
-import { RtmClient, RTM_EVENTS } from '@slack/client';
+import { WebClient, RtmClient, RTM_EVENTS } from '@slack/client';
 
 import Sibyl from './Sibyl';
 
 export default class TeamServer {
   constructor(token) {
+    this.web = new WebClient(token);
     this.rtm = new RtmClient(token, { logLevel: 'warn' });
 
     this.bindEventHandlers();
@@ -47,17 +48,38 @@ export default class TeamServer {
     // );
   }
 
-  handleMessage({ user, text, channel, ts }) {
+  handleMessage({ subtype, user, text, channel, ts }) {
     // TODO: Address these message subtypes
-    // bot_message
     // me_message
     // message_changed
     // message_deleted
     // file_comment
+    if (subtype === 'bot_message') {
+      return;
+    }
+
     const response = this.sibyl.newMessage(user, text, channel, ts);
 
     if (response) {
-      this.rtm.sendMessage(response, channel);
+      this.sendMessage(response, channel);
     }
+  }
+
+  /**
+   * Send a message to a channel.
+   *
+   * @private
+   * @param {string} text The message body.
+   * @param {string} channel The channel id.
+   */
+  sendMessage(text, channel) {
+    const opts = {
+      as_user: false,
+      username: 'Sibyl',
+      icon_url: 'https://vignette2.wikia.nocookie.net/psychopass/images/9/91/' +
+        'Bureau_logo.png/revision/latest?cb=20141029201419',
+    };
+
+    this.web.chat.postMessage(channel, text, opts);
   }
 };
