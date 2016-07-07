@@ -191,10 +191,11 @@ export default class {
    * null if there is no response.
    */
   newMessage(id, message, channel, timestamp) {
-    this.updateUser(id, message, channel, timestamp);
+    const isChannelPublic = this.store.channels.has(channel);
 
-    if (this.store.channels.has(channel)) {
+    if (isChannelPublic) {
       this.updateChannel(channel, message, timestamp);
+      this.updateUser(id, message, channel, timestamp);
     }
 
     const commandInfo = this.parseCommand(message);
@@ -205,7 +206,7 @@ export default class {
         case 'channel':
           return this.psychoPassChannel(commandInfo.id);
         case 'same channel':
-          return this.psychoPassChannel(channel);
+          return isChannelPublic ? this.psychoPassChannel(channel) : null;
         case 'help':
           return this.help();
         case 'users':
