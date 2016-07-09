@@ -187,36 +187,51 @@ export default class {
    * @param {string} channel The id of the channel to which the message was
    * posted.
    * @param {string} timestamp
-   * @return {string|null} The response to be sent to the client or
-   * null if there is no response.
+   * @return {string[]} The responses to be sent to the client. The array is
+   * empty if there is no response.
    */
   newMessage(id, message, channel, timestamp) {
     const isChannelPublic = this.store.channels.has(channel);
+    const responses = [];
 
     if (isChannelPublic) {
       this.updateChannel(channel, message, timestamp);
       this.updateUser(id, message, channel, timestamp);
+
+      const response = this.checkChannelPsychoPass(channel);
+      if (response) {
+        responses.push(warning);
+      }
     }
 
     const commandInfo = this.parseCommand(message);
     if (commandInfo) {
       switch (commandInfo.command) {
         case 'user':
-          return this.psychoPassUser(commandInfo.id);
+          responses.unshift(this.psychoPassUser(commandInfo.id));
+          break;
         case 'channel':
-          return this.psychoPassChannel(commandInfo.id);
+          responses.unshift(this.psychoPassChannel(commandInfo.id));
+          break;
         case 'same channel':
-          return isChannelPublic ? this.psychoPassChannel(channel) : null;
+          (() => {
+            if (isChannelPublic) {
+              responses.unshift(this.psychoPassChannel(channel));
+            }
+          })();
+          break;
         case 'help':
-          return this.help();
+          responses.unshift(this.help());
+          break;
         case 'users':
-          return this.leaderboardUsers();
+          responses.unshift(this.leaderboardUsers());
+          break;
         case 'channels':
-          return this.leaderboardChannels();
+          responses.unshift(this.leaderboardChannels());
       }
     }
 
-    return null;
+    return responses;
   }
 
   /**
@@ -387,6 +402,18 @@ export default class {
 
     this.store.leaderboards.channels.update(id, newPsychoPass, oldPsychoPass);
     this.store.channels.get(id).psychoPass = newPsychoPass;
+  }
+
+  /**
+   * Check if a channel's Psycho-Pass exceeds the acceptable threshold. If so,
+   * produce a response.
+   *
+   * @private
+   * @param {string} channel The channel id.
+   * @return {string|null} The response if there is one, otherwise null.
+   */
+  checkChannelPsychoPass(channel) {
+    return null;
   }
 
   /**

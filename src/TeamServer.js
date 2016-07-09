@@ -58,11 +58,11 @@ export default class TeamServer {
       return;
     }
 
-    const response = this.sibyl.newMessage(user, text, channel, ts);
+    const responses = this.sibyl.newMessage(user, text, channel, ts);
 
-    if (response) {
-      this.sendMessage(response, channel);
-    }
+    responses.forEach((res) => {
+      this.sendMessage(res, channel);
+    });
   }
 
   /**
