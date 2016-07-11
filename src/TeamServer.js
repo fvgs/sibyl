@@ -12,9 +12,9 @@ export default class {
     this.web = new WebClient(token);
     this.rtm = new RtmClient(token, { logLevel: 'warn' });
     this.store = new DataStore();
-    this.sibyl = new Sibyl(this.store);
 
     this.initializeDataStore().then(() => {
+      this.sibyl = new Sibyl(this.store);
       this.bindEventHandlers();
       this.rtm.start();
       console.log('Connected to RTM server');
@@ -44,7 +44,7 @@ export default class {
    * @return {Promise}
    */
   initializeUserData() {
-    return web.users.list().then(({ members }) => {
+    return this.web.users.list().then(({ members }) => {
       const promises = [];
 
       members.forEach(({ id, name: username, real_name: realName }) => {
@@ -97,7 +97,7 @@ export default class {
     const query = `from:${username}`;
     const options = { sort: 'timestamp', count: Sibyl.NUM_USER_MESSAGES };
 
-    return web.search.messages(query, options).then(
+    return this.web.search.messages(query, options).then(
       ({ messages: { matches: userMessages } }) => {
         const messageInfo = userMessages.map(({
           text: message,
@@ -117,21 +117,23 @@ export default class {
    * @return {Promise}
    */
   initializeChannelData() {
-    return web.channels.list({ exclude_archived: 1 }).then(({ channels }) => {
-      const promises = [];
+    return this.web.channels.list({ exclude_archived: 1 }).then(
+      ({ channels }) => {
+        const promises = [];
 
-      channels.forEach(({ id, name }) => {
-        const promise = this.compileChannelData(id).then(
-          ({ psychoPass, messageInfo }) => {
-            this.store.addChannel(id, name, psychoPass, messageInfo);
-          }
-        );
+        channels.forEach(({ id, name }) => {
+          const promise = this.compileChannelData(id).then(
+            ({ psychoPass, messageInfo }) => {
+              this.store.addChannel(id, name, psychoPass, messageInfo);
+            }
+          );
 
-        promises.push(promise);
-      });
+          promises.push(promise);
+        });
 
-      return Promise.all(promises);
-    });
+        return Promise.all(promises);
+      }
+    );
   }
 
   /**
@@ -142,8 +144,8 @@ export default class {
    * @return {Promise<object>} Data related to the channel.
    */
   compileChannelData(id) {
-    return web.channels.history(id, { count: Sibyl.NUM_CHANNEL_MESSAGES }).then(
-      ({ messages }) => {
+    return this.web.channels.history(id, { count: Sibyl.NUM_CHANNEL_MESSAGES })
+      .then(({ messages }) => {
         const messageText = messages.map(({ text }) => text);
         const {
           psychoPass,
@@ -155,8 +157,7 @@ export default class {
         });
 
         return { psychoPass, messageInfo };
-      }
-    );
+      });
   }
 
   bindEventHandlers() {

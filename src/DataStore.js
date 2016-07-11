@@ -38,4 +38,67 @@ export default class {
 
     this.channels.set(id, channelInfo);
   }
+
+  /**
+   * Get a user's username.
+   *
+   * @public
+   * @param {string} id The user id.
+   * @return {string} The user's username.
+   */
+  getUserUsername(id) {
+    return this.users.get(id).username;
+  }
+
+  /**
+   * Get a user's name. If the user does not have a registered name, the
+   * username is returned.
+   *
+   * @public
+   * @param {string} id The user id.
+   * @return {string} The user's name, or username if no registered name is
+   * found.
+   */
+  getUserName(id) {
+    let user = this.users.get(id).name;
+
+    if (!user) {
+      user = this.getUserUsername(id);
+    }
+
+    return user;
+  }
+
+  /**
+   * Get a user's Psycho-Pass.
+   *
+   * @public
+   * @param {string} id The user id.
+   * @return {number} The user's Psycho-Pass.
+   */
+  getUserPsychoPass(id) {
+    return this.users.get(id).psychoPass;
+  }
+
+  /**
+   * Get the name of a channel.
+   *
+   * @public
+   * @param {string} id The channel id.
+   * @return {string} The channel name.
+   */
+  getChannelName(id) {
+    return this.channels.get(id).name;
+  }
+
+  /**
+   * Get a channel's Psycho-Pass.
+   *
+   * @public
+   * @param {string} id The channel id.
+   * @return {number} The channel's Psycho-Pass.
+   */
+  getChannelPsychoPass(id) {
+    return this.channels.get(id).psychoPass;
+  }
 };

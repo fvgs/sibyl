@@ -29,7 +29,7 @@ export default class {
   }
 
   static get NUM_USER_MESSAGES() {
-   return  NUM_USER_MESSAGES;
+    return NUM_USER_MESSAGES;
   }
 
   static get NUM_CHANNEL_MESSAGES() {
@@ -75,7 +75,7 @@ export default class {
    */
   initializeUserLeaderboard() {
     this.store.users.forEach(({ psychoPass }, id) => {
-      this.store.leaderboards.users.update(id, psychoPass);
+      this.userLeaderboard.update(id, psychoPass);
     });
   }
 
@@ -86,7 +86,7 @@ export default class {
    */
   initializeChannelLeaderboard() {
     this.store.channels.forEach(({ psychoPass }, id) => {
-      this.store.leaderboards.channels.update(id, psychoPass);
+      this.channelLeaderboard.update(id, psychoPass);
     });
   }
 
@@ -100,7 +100,7 @@ export default class {
    * posted.
    * @param {string} timestamp
    * @return {string[]} The responses to be sent to the client. The array is
-   * empty if there is no response.
+   * empty if there are no responses.
    */
   newMessage(id, message, channel, timestamp) {
     const isChannelPublic = this.store.channels.has(channel);
@@ -221,18 +221,18 @@ export default class {
    * @return {string} The user leaderboard response.
    */
   leaderboardUsers() {
-    const highest = this.store.leaderboards.users.getHighest();
-    const lowest = this.store.leaderboards.users.getLowest();
+    const highest = this.userLeaderboard.getHighest();
+    const lowest = this.userLeaderboard.getLowest();
 
     let s = 'Lowest:\n';
     lowest.forEach(({ id, value: psychoPass }, index) => {
-      const name = this.getUserName(id);
+      const name = this.store.getUserName(id);
       s += `${psychoPass}    ${name}\n`;
     });
 
     s += '\nHighest:\n';
     highest.forEach(({ id, value: psychoPass }, index) => {
-      const name = this.getUserName(id);
+      const name = this.store.getUserName(id);
       s += `${psychoPass}    ${name}\n`;
     });
 
@@ -246,8 +246,8 @@ export default class {
    * @return {string} The channel leaderboard response.
    */
   leaderboardChannels() {
-    const highest = this.store.leaderboards.channels.getHighest();
-    const lowest = this.store.leaderboards.channels.getLowest();
+    const highest = this.channelLeaderboard.getHighest();
+    const lowest = this.channelLeaderboard.getLowest();
 
     let s = 'Lowest:\n';
     lowest.forEach(({ id, value: psychoPass }, index) => {
@@ -284,7 +284,7 @@ export default class {
     const ratings = messageInfo.map(({ rating }) => rating);
     const newPsychoPass = computeUserPsychoPass(ratings);
 
-    this.store.leaderboards.users.update(id, newPsychoPass, oldPsychoPass);
+    this.userLeaderboard.update(id, newPsychoPass, oldPsychoPass);
     this.store.users.get(id).psychoPass = newPsychoPass;
   }
 
@@ -312,7 +312,7 @@ export default class {
     const ratings = messageInfo.map(({ rating }) => rating);
     const newPsychoPass = computeChannelPsychoPass(ratings);
 
-    this.store.leaderboards.channels.update(id, newPsychoPass, oldPsychoPass);
+    this.channelLeaderboard.update(id, newPsychoPass, oldPsychoPass);
     this.store.channels.get(id).psychoPass = newPsychoPass;
   }
 
@@ -336,8 +336,8 @@ export default class {
    * @return {string} Response to the request.
    */
   psychoPassUser(id) {
-    const name = this.getUserName(id);
-    const psychoPass = this.getUserPsychoPass(id);
+    const name = this.store.getUserName(id);
+    const psychoPass = this.store.getUserPsychoPass(id);
 
     return `${name} has a Psycho-Pass of ${psychoPass}`;
   }
@@ -350,71 +350,8 @@ export default class {
    * @return {string} Response to the request.
    */
   psychoPassChannel(id) {
-    const psychoPass = this.getChannelPsychoPass(id);
+    const psychoPass = this.store.getChannelPsychoPass(id);
 
     return `<#${id}> has a Psycho-Pass of ${psychoPass}`;
-  }
-
-  /**
-   * Get a user's username.
-   *
-   * @private
-   * @param {string} id The user id.
-   * @return {string} The user's username. 
-   */
-  getUserUsername(id) {
-    return this.store.users.get(id).username;
-  }
-
-  /**
-   * Get a user's name. If the user does not have a registered name, the
-   * username is returned.
-   *
-   * @private
-   * @param {string} id The user id.
-   * @return {string} The user's name, or username if no registered name is
-   * found.
-   */
-  getUserName(id) {
-    let user = this.store.users.get(id).name;
-
-    if (!user) {
-      user = this.getUserUsername(id);
-    }
-
-    return user;
-  }
-
-  /**
-   * Get a user's Psycho-Pass.
-   *
-   * @private
-   * @param {string} id The user id.
-   * @return {number} The user's Psycho-Pass.
-   */
-  getUserPsychoPass(id) {
-    return this.store.users.get(id).psychoPass;
-  }
-
-  /**
-   * Get the name of a channel.
-   *
-   * @private
-   * @param {string} id The channel id.
-   * @return {string} The channel name.
-   */
-  getChannelName(id) {
-    return this.store.channels.get(id).name;
-  }
-
-  /**
-   * Get a channel's Psycho-Pass.
-   *
-   * @private
-   * @param {string} id The channel id.
-   * @return {number} The channel's Psycho-Pass.
-   */
-  getChannelPsychoPass(id) {
-    return this.store.channels.get(id).psychoPass;
   }
 };
