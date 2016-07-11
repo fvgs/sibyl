@@ -10,150 +10,62 @@ import {
 import Leaderboard from './leaderboard/Leaderboard';
 
 /**
- * Class responsible for processing input and maintaing the application state.
- * Produces a response to be sent to the client when appropriate.
+ * Class responsible for processing input messages. Produces a response to be
+ * sent to the client when appropriate.
  */
 export default class {
   /**
-   * Initialize data store and Slack web client.
+   * Initialize user and channel leaderboards.
    *
-   * @param {WebClient} web A WebClient instance.
-   * @param {Map<string, object>} userData Map from user id to an object
-   * containing user data.
-   * @param {Map<string, object>} channelData Map from channel id to an object
-   * containing channel data.
+   * @param {DataStore} store
    */
-  constructor(web, userData, channelData) {
-    this.store = {
-      users: userData,
-      channels: channelData,
-      leaderboards: { users: new Leaderboard(), channels: new Leaderboard() },
-    };
-    this.web = web;
+  constructor(store) {
+    this.store = store;
+    this.userLeaderboard = new Leaderboard();
+    this.channelLeaderboard = new Leaderboard();
 
     this.initializeUserLeaderboard();
     this.initializeChannelLeaderboard();
   }
 
+  static get NUM_USER_MESSAGES() {
+   return  NUM_USER_MESSAGES;
+  }
+
+  static get NUM_CHANNEL_MESSAGES() {
+    return NUM_CHANNEL_MESSAGES;
+  }
+
   /**
-   * Create an instance of the Sibyl class.
+   * Compute message ratings and a user's Psycho-Pass given an array of
+   * messages.
    *
    * @public
-   * @param {string} token The Slack API token.
-   * @return {Promise<Sibyl>} Instance of Sibyl class.
+   * @param {string[]} messages
+   * @return {object} The Psycho-Pass and message ratings computed from the
+   * messages.
    */
-  static createSibyl(token) {
-    const web = new WebClient(token);
-    const userData = this.getInitialUserData(web);
-    const channelData = this.getInitialChannelData(web);
-    const sibyl = Promise.all([userData, channelData]).then(
-      ([userData, channelData]) => {
-        return new this(web, userData, channelData);
-      }
-    );
+  static processUserMessages(messages) {
+    const messageRatings = messages.map(computeMessageRating);
+    const psychoPass = computeUserPsychoPass(messageRatings);
 
-    return sibyl;
+    return { psychoPass, messageRatings };
   }
 
   /**
-   * Fetch initial user data.
+   * Compute message ratings and a channel's Psycho-Pass given an array of
+   * messages.
    *
-   * @private
-   * @param {WebClient} web A WebClient instance.
-   * @return {Promise<Map<string, object>>} Map from user id to user data
-   * object.
+   * @public
+   * @param {string[]} messages
+   * @return {object} The Psycho-Pass and message ratings computed from the
+   * messages.
    */
-  static getInitialUserData(web) {
-    return web.users.list().then(({ members }) => {
-      const map = new Map();
-      const promises = [];
+  static processChannelMessages(messages) {
+    const messageRatings = messages.map(computeMessageRating);
+    const psychoPass = computeChannelPsychoPass(messageRatings);
 
-      members.forEach(({ id, name, real_name }) => {
-        const promise = this.compileUserData(web, name, real_name).then(
-          (userData) => {
-            map.set(id, userData);
-          }
-        );
-
-        promises.push(promise);
-      });
-
-      return Promise.all(promises).then(() => map);
-    });
-  }
-
-  /**
-   * Compile data for the given user.
-   *
-   * @private
-   * @param {WebClient} web A WebClient instance.
-   * @param {string} username The username by which to identify the user.
-   * @param {string} name The name of the user.
-   * @return {Promise<object>} Data related to the user.
-   */
-  static compileUserData(web, username, name) {
-    return this.fetchUserMessages(web, username).then((messages) => {
-      const messageInfo = messages.map(({ message, channel, timestamp }) => {
-        const rating = computeMessageRating(message);
-        return { rating, channel, timestamp };
-      });
-      const ratings = messageInfo.map(({ rating }) => rating);
-      const psychoPass = computeUserPsychoPass(ratings);
-
-      return { username, name, psychoPass, messageInfo };
-    });
-  }
-
-  /**
-   * Fetch initial channel data.
-   *
-   * @private
-   * @param {WebClient} web A WebClient instance.
-   * @return {Promise<Map<string, object>>} Map from channel id to channel data
-   * object.
-   */
-  static getInitialChannelData(web) {
-    return web.channels.list({ exclude_archived: 1 }).then(({ channels }) => {
-      const map = new Map();
-      const promises = [];
-
-      channels.forEach(({ id, name }) => {
-        const promise = this.compileChannelData(web, id, name).then(
-          (channelData) => {
-            map.set(id, channelData);
-          }
-        );
-
-        promises.push(promise);
-      });
-
-      return Promise.all(promises).then(() => map);
-    });
-  }
-
-  /**
-   * Compile data for the given channel.
-   *
-   * @private
-   * @param {WebClient} web A WebClient instance.
-   * @param {string} id The channel id.
-   * @param {string} name The name of the channel.
-   * @return {Promise<object>} Data related to the channel.
-   */
-  static compileChannelData(web, id, name) {
-    return web.channels.history(id, { count: NUM_CHANNEL_MESSAGES }).then(
-      ({ messages }) => {
-        const messageInfo = messages.map(({ text, ts: timestamp }) => {
-          const rating = computeMessageRating(text);
-          return { rating, timestamp };
-        });
-
-        const ratings = messageInfo.map(({ rating }) => rating);
-        const psychoPass = computeChannelPsychoPass(ratings);
-
-        return { name, psychoPass, messageInfo };
-      }
-    );
+    return { psychoPass, messageRatings };
   }
 
   /**
@@ -441,31 +353,6 @@ export default class {
     const psychoPass = this.getChannelPsychoPass(id);
 
     return `<#${id}> has a Psycho-Pass of ${psychoPass}`;
-  }
-
-  /**
-   * Fetch the {NUM_USER_MESSAGES} most recent messages for a user.
-   *
-   * @private
-   * @param {WebClient} web A WebClient instance.
-   * @param {string} username
-   * @return {Promise<object[]>} The message objects.
-   */
-  static fetchUserMessages(web, username) {
-    const query = `from:${username}`;
-    const options = { sort: 'timestamp', count: NUM_USER_MESSAGES };
-
-    return web.search.messages(query, options).then(
-      ({ messages: { matches: userMessages } }) => {
-        const messages = userMessages.map(({
-          text: message,
-          ts: timestamp,
-          channel: { id: channel },
-        }) => ({ message, timestamp, channel }));
-
-        return messages;
-      }
-    );
   }
 
   /**
