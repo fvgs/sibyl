@@ -19,7 +19,13 @@ export default class {
    * @param {object[]} messageInfo
    */
   addUser(id, username, name, psychoPass, messageInfo) {
-    const userInfo = { username, name, psychoPass, messageInfo };
+    const userInfo = {
+      username,
+      name,
+      psychoPass,
+      messageInfo,
+      monitorTimeout: 0,
+    };
 
     this.users.set(id, userInfo);
   }
@@ -100,5 +106,42 @@ export default class {
    */
   getChannelPsychoPass(id) {
     return this.channels.get(id).psychoPass;
+  }
+
+  /**
+   * Get the timeout value used by the monitoring feature for the specified
+   * channel.
+   *
+   * @public
+   * @param {string} id The channel id.
+   * @return {number} The monitor timeout value.
+   */
+  getChannelMonitorTimeout(id) {
+    return this.channels.get(id).monitorTimeout;
+  }
+
+  /**
+   * Set the monitor timeout value of the specified channel.
+   *
+   * @public
+   * @param {string} id The channel id.
+   * @param {number} monitorTimeout The timeout value in ticks e.g. 10.
+   */
+  setChannelMonitorTimeout(id, monitorTimeout) {
+    this.channels.get(id).monitorTimeout = monitorTimeout;
+  }
+
+  /**
+   * Subtract one from the monitor timeout value.
+   *
+   * @public
+   * @param {string} id The channel id.
+   */
+  tickChannelMonitorTimeout(id) {
+    const channel = this.channels.get(id);
+
+    if (channel.monitorTimeout > 0) {
+      channel.monitorTimeout--;
+    }
   }
 };

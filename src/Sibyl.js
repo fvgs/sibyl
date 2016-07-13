@@ -112,7 +112,7 @@ export default class {
 
       const response = this.checkChannelPsychoPass(channel);
       if (response) {
-        responses.push(warning);
+        responses.push(response);
       }
     }
 
@@ -325,6 +325,17 @@ export default class {
    * @return {string|null} The response if there is one, otherwise null.
    */
   checkChannelPsychoPass(channel) {
+    if (this.store.getChannelMonitorTimeout(channel) === 0) {
+      const psychoPass = this.store.getChannelPsychoPass(channel);
+
+      if (psychoPass > 100) {
+        this.store.setChannelMonitorTimeout(channel, 10);
+        return 'Fuzzy kittens!';
+      }
+    } else {
+      this.store.tickChannelMonitorTimeout(channel);
+    }
+
     return null;
   }
 
