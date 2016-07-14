@@ -19,13 +19,7 @@ export default class {
    * @param {object[]} messageInfo
    */
   addUser(id, username, name, psychoPass, messageInfo) {
-    const userInfo = {
-      username,
-      name,
-      psychoPass,
-      messageInfo,
-      monitorTimeout: 0,
-    };
+    const userInfo = { username, name, psychoPass, messageInfo };
 
     this.users.set(id, userInfo);
   }
@@ -40,7 +34,7 @@ export default class {
    * @param {object[]} messageInfo
    */
   addChannel(id, name, psychoPass, messageInfo) {
-    const channelInfo = { name, psychoPass, messageInfo };
+    const channelInfo = { name, psychoPass, messageInfo, monitorTimeout: 0 };
 
     this.channels.set(id, channelInfo);
   }
