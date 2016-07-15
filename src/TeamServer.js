@@ -195,10 +195,10 @@ export default class {
       return;
     }
 
-    const responses = this.sibyl.newMessage(user, text, channel, ts);
-
-    responses.forEach((res) => {
-      this.sendMessage(res, channel);
+    this.sibyl.newMessage(user, text, channel, ts).then((responses) => {
+      responses.forEach((res) => {
+        this.sendMessage(res, channel);
+      });
     });
   }
 

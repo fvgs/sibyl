@@ -1,3 +1,4 @@
+import https from 'https';
 import { WebClient } from '@slack/client';
 
 import {
@@ -99,21 +100,24 @@ export default class {
    * @param {string} channel The id of the channel to which the message was
    * posted.
    * @param {string} timestamp
-   * @return {string[]} The responses to be sent to the client. The array is
-   * empty if there are no responses.
+   * @return {Promise<string[]>} The responses to be sent to the client. The
+   * array is empty if there are no responses.
    */
   newMessage(id, message, channel, timestamp) {
     const isChannelPublic = this.store.channels.has(channel);
     const responses = [];
+    let promise = Promise.resolve();
 
     if (isChannelPublic) {
       this.updateChannel(channel, message, timestamp);
-      this.updateUser(id, message, channel, timestamp);
 
-      const response = this.checkChannelPsychoPass(channel);
-      if (response) {
-        responses.push(response);
-      }
+      promise = this.checkChannelPsychoPass(channel).then((res) => {
+        if (res) {
+          responses.push(res);
+        }
+      });
+
+      this.updateUser(id, message, channel, timestamp);
     }
 
     const commandInfo = this.parseCommand(message);
@@ -143,7 +147,7 @@ export default class {
       }
     }
 
-    return responses;
+    return promise.then(() => responses);
   }
 
   /**
@@ -322,7 +326,7 @@ export default class {
    *
    * @private
    * @param {string} channel The channel id.
-   * @return {string|null} The response if there is one, otherwise null.
+   * @return {Promise<string|null>} The response if there is one, otherwise null.
    */
   checkChannelPsychoPass(channel) {
     if (this.store.getChannelMonitorTimeout(channel) === 0) {
@@ -330,13 +334,23 @@ export default class {
 
       if (psychoPass > 100) {
         this.store.setChannelMonitorTimeout(channel, 10);
-        return 'Fuzzy kittens!';
+        return this.elevatedPsychoPassResponse();
       }
     } else {
       this.store.tickChannelMonitorTimeout(channel);
     }
 
-    return null;
+    return Promise.resolve(null);
+  }
+
+  /**
+   * Produce a response message for handling an elevated channel Psycho-Pass.
+   *
+   * @private
+   * @return {Promise<string>} The response message.
+   */
+  elevatedPsychoPassResponse() {
+    return Promise.resolve('Fuzzy kittens!');
   }
 
   /**
