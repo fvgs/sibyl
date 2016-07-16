@@ -326,7 +326,8 @@ export default class {
    *
    * @private
    * @param {string} channel The channel id.
-   * @return {Promise<string|null>} The response if there is one, otherwise null.
+   * @return {Promise<string|null>} The response if there is one, otherwise
+   * null.
    */
   checkChannelPsychoPass(channel) {
     if (this.store.getChannelMonitorTimeout(channel) === 0) {
@@ -350,7 +351,16 @@ export default class {
    * @return {Promise<string>} The response message.
    */
   elevatedPsychoPassResponse() {
-    return Promise.resolve('Fuzzy kittens!');
+    const apiKey = process.env.SIBYL_GIPHY_API_KEY;
+    const uri = `https://api.giphy.com/v1/gifs/random?api_key=${apiKey}`;
+
+    return new Promise((resolve, reject) => {
+      https.get(uri, (res) => {
+        res.on('data', (body) => {
+          resolve('Fuzzy kittens!');
+        });
+      }).on('error', reject);
+    });
   }
 
   /**
